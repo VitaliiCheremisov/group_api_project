@@ -118,6 +118,7 @@ class Reviews(models.Model):
         null=True
     )
 
+
     class Meta:
         verbose_name = 'Отзыв'
         verbose_name_plural = 'Отзывы'
