@@ -1,5 +1,8 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.core.validators import (
+    MaxValueValidator,
+    MinValueValidator)
 
 USER = 'user'
 ADMIN = 'admin'
@@ -73,3 +76,92 @@ class CustomUser(AbstractUser):
 
     def __str__(self):
         return self.username
+
+
+class Reviews(models.Model):
+
+    author = models.ForeignKey(
+        CustomUser,
+        on_delete=models.CASCADE,
+        related_name='author',
+        verbose_name='Автор отзыва'
+    )
+    text = models.TextField(
+        verbose_name='Текст отзыва'
+    )
+
+    mark = models.PositiveIntegerField(        
+        verbose_name='Oценка',
+        validators=[
+            MinValueValidator(
+                1,
+                message='Используйте число от 1 до 10!'
+            ),
+            MaxValueValidator(
+                10,
+                message='Используйте число от 1 до 10!'
+            ),
+        ]
+    )
+
+    public_date = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Дата создания',
+        db_index=True
+    )
+
+    title = models.ForeignKey(
+        'Тут будет название модели произведений',
+        on_delete=models.CASCADE,
+        related_name='reviews',
+        verbose_name='Произведение',
+        null=True
+    )
+
+
+    class Meta:
+        verbose_name = 'Отзыв'
+        verbose_name_plural = 'Отзывы'
+        ordering = ('-public_date',)
+        constraints = (
+            models.UniqueConstraint(
+                fields=['author', 'titles'],
+                name='unique_author_title'
+            ),
+        )
+
+    def __str__(self):
+        return self.text[:20]
+
+
+class Comment(models.Model):
+    """Тут мы отрабатываем комментарии к отзывам."""
+
+    text = models.TextField(
+        verbose_name='Текст комментария'
+    )
+    author = models.ForeignKey(
+        CustomUser,
+        on_delete=models.CASCADE,
+        related_name='comments',
+        verbose_name='Aвтор комментария'
+    )
+    public_date = models.DateTimeField(
+        auto_now_add=True,
+        db_index=True,
+        verbose_name='Дата создания'
+    )
+    review = models.ForeignKey(
+        Reviews,
+        on_delete=models.CASCADE,
+        related_name='comments',
+        verbose_name='Отзыв',
+    )
+
+    class Meta:
+        verbose_name = 'Комментарий к отзыву'
+        verbose_name_plural = 'Комментарии к отзыву'
+        ordering = ('-public_date',)
+
+    def __str__(self):
+        return self.text[:20]
