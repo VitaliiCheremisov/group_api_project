@@ -4,30 +4,28 @@ from django.db.models import Avg
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.tokens import default_token_generator
-from rest_framework import viewsets, status, permissions, mixins, filters, serializers
+from rest_framework import (viewsets, status, permissions,
+                            mixins, filters, serializers)
 from rest_framework.views import APIView
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
-
-from reviews.models import  Category, Comment, Genre, Reviews, Title, CustomUser
-
+from reviews.models import (Category, Genre, Reviews, Title,
+                            CustomUser)
 from .serializers import (
     CategorySerializer,
     CommentSerializer,
     GenreSerializer,
-    ReviewSerializer,
+    ReviewsSerializer,
     TitleChangeSerializer,
     TitleSerializer,
     TokenSerializer,
     SignUpSerializer,
     CustomUserSerializer
 )
-
 from .filters import TitleFilter
-
 from .permissions import IsSuperUserOrIsAdmin
 
 
@@ -152,14 +150,14 @@ class UsersViewSet(mixins.ListModelMixin,
             return Response(serializer.data, status=status.HTTP_200_OK)
         serializer = CustomUserSerializer(request.user)
         return Response(serializer.data, status=status.HTTP_200_OK)
-      
-      
-class ReviewsViewSet(viewsets.ModelViewSet):
-    """Вьюсет для обьектов модели Review."""
 
-    serializer_class = ReviewSerializer
+
+class ReviewsViewSet(viewsets.ModelViewSet):
+    """Вьюсет для обьектов модели Reviews."""
+
+    serializer_class = ReviewsSerializer
     permission_classes = (
-        # Здесь мне нужно разрешение в зависимости от роли
+        IsSuperUserOrIsAdmin,
         permissions.IsAuthenticatedOrReadOnly,
 
     )
@@ -167,7 +165,7 @@ class ReviewsViewSet(viewsets.ModelViewSet):
     def get_title(self):
         """Возвращает объект текущего произведения."""
         title_id = self.kwargs.get('title_id')
-        return get_object_or_404("Модель произведения", pk=title_id)
+        return get_object_or_404(Title, pk=title_id)
 
     def get_queryset(self):
         """Возвращает queryset c отзывами для текущего произведения."""
@@ -187,19 +185,19 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     serializer_class = CommentSerializer
     permission_classes = (
-        # Здесь мне нужно разрешение в зависимости от роли
+        IsSuperUserOrIsAdmin,
         permissions.IsAuthenticatedOrReadOnly,
     )
 
-    def get_review(self):
-        review_id = self.kwargs.get('review_id')
-        return get_object_or_404(Review, pk=review_id)
+    def get_reviews(self):
+        reviews_id = self.kwargs.get('reviews_id')
+        return get_object_or_404(Reviews, pk=reviews_id)
 
     def get_queryset(self):
-        return self.get_review().comments.all()
+        return self.get_reviews().comments.all()
 
     def perform_create(self, serializer):
         serializer.save(
             author=self.request.user,
-            review=self.get_review()
+            review=self.get_reviews()
         )

@@ -164,14 +164,14 @@ class Reviews(models.Model):
     author = models.ForeignKey(
         CustomUser,
         on_delete=models.CASCADE,
-        related_name='author',
+        related_name='reviews',
         verbose_name='Автор отзыва'
     )
     text = models.TextField(
         verbose_name='Текст отзыва'
     )
 
-    mark = models.PositiveIntegerField(        
+    score = models.PositiveIntegerField(  
         verbose_name='Oценка',
         validators=[
             MinValueValidator(
@@ -181,9 +181,7 @@ class Reviews(models.Model):
             MaxValueValidator(
                 10,
                 message='Используйте число от 1 до 10!'
-            ),
-        ]
-    )
+            ), ])
 
     public_date = models.DateTimeField(
         auto_now_add=True,
@@ -192,13 +190,12 @@ class Reviews(models.Model):
     )
 
     title = models.ForeignKey(
-        'Тут будет название модели произведений',
+        Title,
         on_delete=models.CASCADE,
         related_name='reviews',
         verbose_name='Произведение',
         null=True
     )
-
 
     class Meta:
         verbose_name = 'Отзыв'
@@ -206,14 +203,13 @@ class Reviews(models.Model):
         ordering = ('-public_date',)
         constraints = (
             models.UniqueConstraint(
-                fields=['author', 'titles'],
+                fields=['author', 'title'],
                 name='unique_author_title'
             ),
         )
 
     def __str__(self):
         return self.text[:SHORT_TEXT_LENGTH]
-
 
 
 class Comment(models.Model):
@@ -233,7 +229,7 @@ class Comment(models.Model):
         db_index=True,
         verbose_name='Дата создания'
     )
-    review = models.ForeignKey(
+    reviews = models.ForeignKey(
         Reviews,
         on_delete=models.CASCADE,
         related_name='comments',
