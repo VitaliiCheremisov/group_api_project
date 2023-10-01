@@ -1,8 +1,13 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
-from django.core.validators import (
-    MaxValueValidator,
-    MinValueValidator)
+from django.core.validators import (MaxValueValidator,
+                                    MinValueValidator)
+
+from .validators import validate_year
+
+SHORT_TEXT_LENGTH = 20
+MAX_LENGTH = 256
+SLUG_MAX_LENGTH = 50
 
 USER = 'user'
 ADMIN = 'admin'
@@ -78,6 +83,82 @@ class CustomUser(AbstractUser):
         return self.username
 
 
+class Category(models.Model):
+    name = models.CharField(
+        'Название категории',
+        max_length=MAX_LENGTH
+        )
+    slug = models.SlugField(
+        'Slug категории',
+        unique=True,
+        max_length=SLUG_MAX_LENGTH
+        )
+
+    class Meta:
+        ordering = ('name',)
+        verbose_name = 'Категория'
+        verbose_name_plural = 'Категории'
+
+    def __str__(self):
+        return self.name[:SHORT_TEXT_LENGTH]
+
+
+class Genre(models.Model):
+    name = models.CharField(
+        'Название жанра',
+        max_length=MAX_LENGTH
+        )
+    slug = models.SlugField(
+        'Slug жанра',
+        unique=True,
+        max_length=SLUG_MAX_LENGTH
+        )
+
+    class Meta:
+        ordering = ('name',)
+        verbose_name = 'Жанр'
+        verbose_name_plural = 'Жанры'
+
+    def __str__(self):
+        return self.name[:SHORT_TEXT_LENGTH]
+
+
+class Title(models.Model):
+    name = models.CharField(
+        'Название произведения',
+        max_length=MAX_LENGTH
+        )
+    year = models.IntegerField(
+        'Год выпуска',
+        validators=(validate_year,),
+        )
+    description = models.TextField(
+        'Описание',
+        blank=True,
+        null=True
+        )
+    genre = models.ManyToManyField(
+        Genre,
+        verbose_name='Жанр',
+    )
+    category = models.ForeignKey(
+        Category,
+        on_delete=models.SET_NULL,
+        verbose_name='Категория',
+        blank=True,
+        null=True,
+    )
+
+    class Meta:
+        ordering = ('-year', 'name')
+        default_related_name = 'titles'
+        verbose_name = 'Произведение'
+        verbose_name_plural = 'Произведения'
+
+    def __str__(self):
+        return self.name[:SHORT_TEXT_LENGTH]
+
+
 class Reviews(models.Model):
 
     author = models.ForeignKey(
@@ -131,7 +212,8 @@ class Reviews(models.Model):
         )
 
     def __str__(self):
-        return self.text[:20]
+        return self.text[:SHORT_TEXT_LENGTH]
+
 
 
 class Comment(models.Model):
@@ -164,4 +246,4 @@ class Comment(models.Model):
         ordering = ('-public_date',)
 
     def __str__(self):
-        return self.text[:20]
+        return self.text[:SHORT_TEXT_LENGTH]

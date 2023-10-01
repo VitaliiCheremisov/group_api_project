@@ -1,12 +1,52 @@
 from rest_framework import viewsets
 from rest_framework.views import APIView
+from django.db.models import Avg
 from django.shortcuts import get_object_or_404
-from reviews.models import  Reviews, "Модель произведения",
-from .serializers import (
-    CommentSerializer, ReviewSerializer,
+from reviews.models import  Category, Comment, Genre, Reviews, Title
+from api.serializers import (
+    CategorySerializer,
+    CommentSerializer,
+    GenreSerializer,
+    ReviewSerializer,
+    TitleChangeSerializer,
+    TitleSerializer
 )
+from api.filters import TitleFilter
 from rest_framework import filters, mixins, permissions, status, viewsets
-from .permissions import ("Братка, тут твои разрешения")
+# from .permissions import ("Братка, тут твои разрешения")
+
+
+class CategoryViewSet(GetPostDeleteViewSet):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+    # permission_classes = (,)
+    filter_backends = (TitleFilter,)
+    search_fields = ('name',)
+    lookup_field = 'slug'
+
+
+class GenreViewSet(GetPostDeleteViewSet):
+    queryset = Genre.objects.all()
+    serializer_class = GenreSerializer
+    # permission_classes = (,)
+    filter_backends = (TitleFilter,)
+    search_fields = ('name',)
+    lookup_field = 'slug'
+
+
+class TitleViewSet(viewsets.ModelViewSet):
+    serializer_class = TitleSerializer
+    queryset = Title.objects.annotate(
+        rating=Avg('reviews__score')
+    ).all()
+    filter_backends = (TitleFilter,)
+    filterset_class = TitleFilter
+    # permission_classes = (,)
+
+    def get_serializer_class(self):
+        if self.action in ['list', 'retrieve']:
+            return TitleSerializer
+        return TitleChangeSerializer
 
 
 class UsersViewSet(viewsets.ModelViewSet):
