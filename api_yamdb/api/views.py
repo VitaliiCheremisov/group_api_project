@@ -1,21 +1,67 @@
 from django.conf import settings
 from django.db import IntegrityError
+from django.db.models import Avg
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.tokens import default_token_generator
 from rest_framework import viewsets, status, permissions, mixins, filters, serializers
+from rest_framework.views import APIView
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
-from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 
-from reviews.models import  CustomUser, Reviews, "Модель произведения",
+from reviews.models import  Category, Comment, Genre, Reviews, Title, CustomUser
 
-from .serializers import TokenSerializer, SignUpSerializer, CustomUserSerializer
+from .serializers import (
+    CategorySerializer,
+    CommentSerializer,
+    GenreSerializer,
+    ReviewSerializer,
+    TitleChangeSerializer,
+    TitleSerializer,
+    TokenSerializer,
+    SignUpSerializer,
+    CustomUserSerializer
+)
+
+from .filters import TitleFilter
 
 from .permissions import IsSuperUserOrIsAdmin
+
+
+class CategoryViewSet(GetPostDeleteViewSet):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+    # permission_classes = (,)
+    filter_backends = (TitleFilter,)
+    search_fields = ('name',)
+    lookup_field = 'slug'
+
+
+class GenreViewSet(GetPostDeleteViewSet):
+    queryset = Genre.objects.all()
+    serializer_class = GenreSerializer
+    # permission_classes = (,)
+    filter_backends = (TitleFilter,)
+    search_fields = ('name',)
+    lookup_field = 'slug'
+
+
+class TitleViewSet(viewsets.ModelViewSet):
+    serializer_class = TitleSerializer
+    queryset = Title.objects.annotate(
+        rating=Avg('reviews__score')
+    ).all()
+    filter_backends = (TitleFilter,)
+    filterset_class = TitleFilter
+    # permission_classes = (,)
+
+    def get_serializer_class(self):
+        if self.action in ['list', 'retrieve']:
+            return TitleSerializer
+        return TitleChangeSerializer
 
 
 class APISignUp(APIView):
@@ -46,7 +92,7 @@ class APISignUp(APIView):
 
 
 class APIToken(APIView):
-    """Полчения токена"""
+    """Получение токена"""
     def post(self, request):
         serializer = TokenSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
