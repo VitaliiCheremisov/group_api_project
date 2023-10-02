@@ -1,7 +1,6 @@
 import os
-from pathlib import Path
-
 from datetime import timedelta
+from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -105,9 +104,12 @@ EMAIL_FILE_PATH = os.path.join(BASE_DIR, 'sent_emails')
 EMAIL_PROJECT = 'vitalii.cheremisov@mail.ru'
 
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
+    'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ),
+    ],
+    'DEFAULT_FILTER_BACKENDS': [
+            'django_filters.rest_framework.DjangoFilterBackend',
+    ],
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": PAGE_PAGINATION_NUMBER,
 }
@@ -117,3 +119,20 @@ SIMPLE_JWT = {
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
 
+ALLOWED_METHODS = ['get', 'post', 'retrieve', 'patch', 'delete']
+
+MAX_NAME_LENGTH = 150
+
+SHORT_TEXT_LENGTH = 20
+
+MAX_LENGTH = 256
+
+MAX_EMAIL_LENGTH = 250
+
+MAX_ROLE_LENGTH = 20
+
+SLUG_MAX_LENGTH = 50
+
+MIN_VALUE_VALIDATOR = 1
+
+MAX_VALUE_VALIDATOR = 10

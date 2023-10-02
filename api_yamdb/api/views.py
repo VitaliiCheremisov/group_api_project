@@ -1,76 +1,73 @@
 from django.conf import settings
+from django.contrib.auth.tokens import default_token_generator
+from django.core.mail import send_mail
 from django.db import IntegrityError
 from django.db.models import Avg
-from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
-from django.contrib.auth.tokens import default_token_generator
-from rest_framework import (viewsets, status, permissions,
-                            mixins, filters, serializers)
-from rest_framework.views import APIView
-from rest_framework.pagination import PageNumberPagination
-from rest_framework.response import Response
-from rest_framework_simplejwt.tokens import RefreshToken
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import (filters, mixins, permissions, serializers, status,
+                            viewsets)
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
-from reviews.models import (Category, Genre, Reviews, Title,
-                            CustomUser)
-from .serializers import (
-    CategorySerializer,
-    CommentSerializer,
-    GenreSerializer,
-    ReviewsSerializer,
-    TitleChangeSerializer,
-    TitleSerializer,
-    TokenSerializer,
-    SignUpSerializer,
-    CustomUserSerializer
-)
+from rest_framework.filters import SearchFilter
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework_simplejwt.tokens import RefreshToken
+from reviews.models import Category, CustomUser, Genre, Review, Title
+
 from .filters import TitleFilter
-from .permissions import IsSuperUserOrIsAdmin
-
-
-class CreateDestroyListViewSet(mixins.CreateModelMixin,
-                              mixins.DestroyModelMixin,
-                              mixins.ListModelMixin,
-                              viewsets.GenericViewSet):
-    pass
+from .permissions import (IsAdminIsModeratorIsAuthor, IsAdminIsUserOrReadOnly,
+                          IsSuperUserOrIsAdmin)
+from .serializers import (CategorySerializer, CommentSerializer,
+                          CustomUserSerializer, GenreSerializer,
+                          ReviewsSerializer, SignUpSerializer,
+                          TitleChangeSerializer, TitleSerializer,
+                          TokenSerializer)
+from .utils import CreateDestroyListViewSet
 
 
 class CategoryViewSet(CreateDestroyListViewSet):
+    """Работа с категориями."""
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = (IsSuperUserOrIsAdmin,)
-    filter_backends = (TitleFilter,)
+    permission_classes = (IsAdminIsUserOrReadOnly,)
+    filter_backends = (SearchFilter,)
+    pagination_class = PageNumberPagination
     search_fields = ('name',)
     lookup_field = 'slug'
 
 
 class GenreViewSet(CreateDestroyListViewSet):
+    """Работа с жанрами."""
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
-    permission_classes = (IsSuperUserOrIsAdmin,)
-    filter_backends = (TitleFilter,)
+    permission_classes = (IsAdminIsUserOrReadOnly,)
+    filter_backends = (SearchFilter,)
     search_fields = ('name',)
     lookup_field = 'slug'
 
 
 class TitleViewSet(viewsets.ModelViewSet):
+    """Работа с заголовками."""
     serializer_class = TitleSerializer
     queryset = Title.objects.annotate(
         rating=Avg('reviews__score')
     ).all()
-    filter_backends = (TitleFilter,)
+    filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
-    permission_classes = (IsSuperUserOrIsAdmin,)
+    permission_classes = (IsAdminIsUserOrReadOnly,)
+    http_method_names = settings.ALLOWED_METHODS
 
     def get_serializer_class(self):
+        """Выбор нужного сериалайзера."""
         if self.action in ['list', 'retrieve']:
             return TitleSerializer
         return TitleChangeSerializer
 
 
 class APISignUp(APIView):
-    """Создание нового пользователя"""
+    """Создание нового пользователя."""
     permission_classes = (permissions.AllowAny,)
 
     def post(self, request):
@@ -82,7 +79,9 @@ class APISignUp(APIView):
         username = serializer.validated_data.get('username')
         email = serializer.validated_data.get('email')
         try:
-            user, _ = CustomUser.objects.get_or_create(username=username, email=email)
+            user, _ = CustomUser.objects.get_or_create(
+                username=username, email=email
+            )
         except IntegrityError:
             raise serializers.ValidationError('Пользователь уже существует')
         confirmation_code = default_token_generator.make_token(user)
@@ -97,7 +96,7 @@ class APISignUp(APIView):
 
 
 class APIToken(APIView):
-    """Получение токена"""
+    """Получение токена."""
     def post(self, request):
         serializer = TokenSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -112,7 +111,7 @@ class APIToken(APIView):
 class UsersViewSet(mixins.ListModelMixin,
                    mixins.CreateModelMixin,
                    viewsets.GenericViewSet):
-    """Работа с пользователем"""
+    """Работа с пользователем."""
     queryset = CustomUser.objects.all()
     serializer_class = CustomUserSerializer
     permission_classes = (IsSuperUserOrIsAdmin,)
@@ -127,7 +126,9 @@ class UsersViewSet(mixins.ListModelMixin,
         url_name='get_user'
     )
     def get_user(self, request, username):
-        user = get_object_or_404(CustomUser, username=username)
+        user = get_object_or_404(
+            CustomUser, username=username
+        )
         if request.method == 'PATCH':
             serializer = CustomUserSerializer(user, data=request.data, partial=True)
             serializer.is_valid(raise_exception=True)
@@ -161,13 +162,9 @@ class UsersViewSet(mixins.ListModelMixin,
 
 class ReviewsViewSet(viewsets.ModelViewSet):
     """Вьюсет для обьектов модели Reviews."""
-
     serializer_class = ReviewsSerializer
-    permission_classes = (
-        IsSuperUserOrIsAdmin,
-        permissions.IsAuthenticatedOrReadOnly,
-
-    )
+    permission_classes = (IsAdminIsModeratorIsAuthor,)
+    http_method_names = settings.ALLOWED_METHODS
 
     def get_title(self):
         """Возвращает объект текущего произведения."""
@@ -189,16 +186,13 @@ class ReviewsViewSet(viewsets.ModelViewSet):
 
 class CommentViewSet(viewsets.ModelViewSet):
     """Вьюсет для обьектов модели Comment."""
-
     serializer_class = CommentSerializer
-    permission_classes = (
-        IsSuperUserOrIsAdmin,
-        permissions.IsAuthenticatedOrReadOnly,
-    )
+    permission_classes = (IsAdminIsModeratorIsAuthor,)
+    http_method_names = settings.ALLOWED_METHODS
 
     def get_reviews(self):
         reviews_id = self.kwargs.get('reviews_id')
-        return get_object_or_404(Reviews, pk=reviews_id)
+        return get_object_or_404(Review, pk=reviews_id)
 
     def get_queryset(self):
         return self.get_reviews().comments.all()
@@ -206,5 +200,5 @@ class CommentViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(
             author=self.request.user,
-            review=self.get_reviews()
+            reviews=self.get_reviews()
         )
