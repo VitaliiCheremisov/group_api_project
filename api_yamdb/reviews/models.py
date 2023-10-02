@@ -1,13 +1,10 @@
+from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.core.validators import (MaxValueValidator,
                                     MinValueValidator)
 
 from .validators import validate_year
-
-SHORT_TEXT_LENGTH = 20
-MAX_LENGTH = 256
-SLUG_MAX_LENGTH = 50
 
 USER = 'user'
 ADMIN = 'admin'
@@ -22,25 +19,25 @@ CHOICES = [
 
 class CustomUser(AbstractUser):
     username = models.CharField(
-        max_length=128,
+        max_length=settings.MAX_NAME_LENGTH,
         unique=True,
         blank=False,
         null=False
     )
     email = models.EmailField(
-        max_length=250,
+        max_length=settings.MAX_EMAIL_LENGTH,
         unique=True,
         blank=False,
         null=False
     )
     first_name = models.CharField(
         'имя',
-        max_length=150,
+        max_length=settings.MAX_NAME_LENGTH,
         blank=True
     )
     last_name = models.CharField(
         'фамилия',
-        max_length=150,
+        max_length=settings.MAX_NAME_LENGTH,
         blank=True
     )
     bio = models.TextField(
@@ -49,14 +46,14 @@ class CustomUser(AbstractUser):
     )
     role = models.CharField(
         'роль',
-        max_length=20,
+        max_length=settings.MAX_ROLE_LENGTH,
         choices=CHOICES,
         default=USER,
         blank=True
     )
     confirmation_code = models.CharField(
         'код подтверждения',
-        max_length=250,
+        max_length=settings.MAX_NAME_LENGTH,
         null=True,
         blank=False,
         default='0000'
@@ -86,12 +83,12 @@ class CustomUser(AbstractUser):
 class Category(models.Model):
     name = models.CharField(
         'Название категории',
-        max_length=MAX_LENGTH
+        max_length=settings.MAX_LENGTH
         )
     slug = models.SlugField(
         'Slug категории',
         unique=True,
-        max_length=SLUG_MAX_LENGTH
+        max_length=settings.SLUG_MAX_LENGTH
         )
 
     class Meta:
@@ -100,18 +97,18 @@ class Category(models.Model):
         verbose_name_plural = 'Категории'
 
     def __str__(self):
-        return self.name[:SHORT_TEXT_LENGTH]
+        return self.name[:settings.SHORT_TEXT_LENGTH]
 
 
 class Genre(models.Model):
     name = models.CharField(
         'Название жанра',
-        max_length=MAX_LENGTH
+        max_length=settings.MAX_LENGTH
         )
     slug = models.SlugField(
         'Slug жанра',
         unique=True,
-        max_length=SLUG_MAX_LENGTH
+        max_length=settings.SLUG_MAX_LENGTH
         )
 
     class Meta:
@@ -120,13 +117,13 @@ class Genre(models.Model):
         verbose_name_plural = 'Жанры'
 
     def __str__(self):
-        return self.name[:SHORT_TEXT_LENGTH]
+        return self.name[:settings.SHORT_TEXT_LENGTH]
 
 
 class Title(models.Model):
     name = models.CharField(
         'Название произведения',
-        max_length=MAX_LENGTH
+        max_length=settings.MAX_LENGTH
         )
     year = models.IntegerField(
         'Год выпуска',
@@ -156,7 +153,7 @@ class Title(models.Model):
         verbose_name_plural = 'Произведения'
 
     def __str__(self):
-        return self.name[:SHORT_TEXT_LENGTH]
+        return self.name[:settings.SHORT_TEXT_LENGTH]
 
 
 class GenreTitle(models.Model):
@@ -175,7 +172,7 @@ class GenreTitle(models.Model):
         return f'{self.title} - это {self.genre} жанр.'
 
 
-class Reviews(models.Model):
+class Review(models.Model):
 
     author = models.ForeignKey(
         CustomUser,
@@ -191,15 +188,15 @@ class Reviews(models.Model):
         verbose_name='Oценка',
         validators=[
             MinValueValidator(
-                1,
+                settings.MIN_VALUE_VALIDATOR,
                 message='Используйте число от 1 до 10!'
             ),
             MaxValueValidator(
-                10,
+                settings.MAX_VALUE_VALIDATOR,
                 message='Используйте число от 1 до 10!'
             ), ])
 
-    public_date = models.DateTimeField(
+    pub_date = models.DateTimeField(
         auto_now_add=True,
         verbose_name='Дата создания',
         db_index=True
@@ -216,7 +213,7 @@ class Reviews(models.Model):
     class Meta:
         verbose_name = 'Отзыв'
         verbose_name_plural = 'Отзывы'
-        ordering = ('-public_date',)
+        ordering = ('-pub_date',)
         constraints = (
             models.UniqueConstraint(
                 fields=['author', 'title'],
@@ -225,7 +222,7 @@ class Reviews(models.Model):
         )
 
     def __str__(self):
-        return self.text[:SHORT_TEXT_LENGTH]
+        return self.text[:settings.SHORT_TEXT_LENGTH]
 
 
 class Comment(models.Model):
@@ -240,13 +237,13 @@ class Comment(models.Model):
         related_name='comments',
         verbose_name='Aвтор комментария'
     )
-    public_date = models.DateTimeField(
+    pub_date = models.DateTimeField(
         auto_now_add=True,
         db_index=True,
         verbose_name='Дата создания'
     )
     reviews = models.ForeignKey(
-        Reviews,
+        Review,
         on_delete=models.CASCADE,
         related_name='comments',
         verbose_name='Отзыв',
@@ -255,7 +252,7 @@ class Comment(models.Model):
     class Meta:
         verbose_name = 'Комментарий к отзыву'
         verbose_name_plural = 'Комментарии к отзыву'
-        ordering = ('-public_date',)
+        ordering = ('-pub_date',)
 
     def __str__(self):
-        return self.text[:SHORT_TEXT_LENGTH]
+        return self.text[:settings.SHORT_TEXT_LENGTH]
