@@ -159,6 +159,22 @@ class Title(models.Model):
         return self.name[:SHORT_TEXT_LENGTH]
 
 
+class GenreTitle(models.Model):
+    genre = models.ForeignKey(
+        Genre,
+        verbose_name='Жанр',
+        on_delete=models.CASCADE,
+    )
+    title = models.ForeignKey(
+        Title,
+        verbose_name='Произведение',
+        on_delete=models.CASCADE,
+    )
+
+    def __str__(self):
+        return f'{self.title} - это {self.genre} жанр.'
+
+
 class Reviews(models.Model):
 
     author = models.ForeignKey(
