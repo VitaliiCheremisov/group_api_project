@@ -29,19 +29,26 @@ from .filters import TitleFilter
 from .permissions import IsSuperUserOrIsAdmin
 
 
-class CategoryViewSet(GetPostDeleteViewSet):
+class CreateDestroyListViewSet(mixins.CreateModelMixin,
+                              mixins.DestroyModelMixin,
+                              mixins.ListModelMixin,
+                              viewsets.GenericViewSet):
+    pass
+
+
+class CategoryViewSet(CreateDestroyListViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    # permission_classes = (,)
+    permission_classes = (IsSuperUserOrIsAdmin,)
     filter_backends = (TitleFilter,)
     search_fields = ('name',)
     lookup_field = 'slug'
 
 
-class GenreViewSet(GetPostDeleteViewSet):
+class GenreViewSet(CreateDestroyListViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
-    # permission_classes = (,)
+    permission_classes = (IsSuperUserOrIsAdmin,)
     filter_backends = (TitleFilter,)
     search_fields = ('name',)
     lookup_field = 'slug'
@@ -54,7 +61,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     ).all()
     filter_backends = (TitleFilter,)
     filterset_class = TitleFilter
-    # permission_classes = (,)
+    permission_classes = (IsSuperUserOrIsAdmin,)
 
     def get_serializer_class(self):
         if self.action in ['list', 'retrieve']:
