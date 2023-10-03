@@ -119,7 +119,7 @@ SIMPLE_JWT = {
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
 
-ALLOWED_METHODS = ['get', 'post', 'retrieve', 'patch', 'delete']
+ALLOWED_METHODS = ('get', 'post', 'retrieve', 'patch', 'delete')
 
 MAX_NAME_LENGTH = 150
 
@@ -136,3 +136,13 @@ SLUG_MAX_LENGTH = 50
 MIN_VALUE_VALIDATOR = 1
 
 MAX_VALUE_VALIDATOR = 10
+
+USER = 'user'
+ADMIN = 'admin'
+MODERATOR = 'moderator'
+
+CHOICES = [
+    (ADMIN, 'Администратор'),
+    (MODERATOR, 'Модератор'),
+    (USER, 'Пользователь')
+]

@@ -2,16 +2,17 @@ import csv
 
 from django.conf import settings
 from django.core.management.base import BaseCommand
-from reviews.models import Category, Comment, CustomUser, Genre, GenreTitle, Reviews, Title
+from reviews.models import Category, Comment, CustomUser, Genre, GenreTitle, Review, Title
 
 FILES_CSV = {Category: 'category.csv',
              Comment: 'comments.csv',
              GenreTitle: 'genre_title.csv',
              Genre: 'genre.csv',
-             Reviews: 'review.csv',
+             Review: 'review.csv',
              Title: 'titles.csv',
              CustomUser: 'users.csv'
              }
+
 
 class Command(BaseCommand):
     help = 'Загрузка данных из CSV файла в базу данных.'

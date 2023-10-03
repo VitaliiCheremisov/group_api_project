@@ -6,16 +6,6 @@ from django.core.validators import (MaxValueValidator,
 
 from .validators import validate_year
 
-USER = 'user'
-ADMIN = 'admin'
-MODERATOR = 'moderator'
-
-CHOICES = [
-    (ADMIN, 'Администратор'),
-    (MODERATOR, 'Модератор'),
-    (USER, 'Пользователь')
-]
-
 
 class CustomUser(AbstractUser):
     username = models.CharField(
@@ -47,8 +37,8 @@ class CustomUser(AbstractUser):
     role = models.CharField(
         'роль',
         max_length=settings.MAX_ROLE_LENGTH,
-        choices=CHOICES,
-        default=USER,
+        choices=settings.CHOICES,
+        default=settings.USER,
         blank=True
     )
     confirmation_code = models.CharField(
@@ -61,15 +51,15 @@ class CustomUser(AbstractUser):
 
     @property
     def is_admin(self):
-        return self.role == ADMIN
+        return self.role == settings.ADMIN
 
     @property
     def is_moderator(self):
-        return self.role == MODERATOR
+        return self.role == settings.MODERATOR
 
     @property
     def is_user(self):
-        return self.role == USER
+        return self.role == settings.USER
 
     class Meta:
         ordering = ('id',)
