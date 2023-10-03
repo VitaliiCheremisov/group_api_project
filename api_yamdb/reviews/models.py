@@ -74,12 +74,12 @@ class Category(models.Model):
     name = models.CharField(
         'Название категории',
         max_length=settings.MAX_LENGTH
-        )
+    )
     slug = models.SlugField(
         'Slug категории',
         unique=True,
         max_length=settings.SLUG_MAX_LENGTH
-        )
+    )
 
     class Meta:
         ordering = ('name',)
@@ -94,12 +94,12 @@ class Genre(models.Model):
     name = models.CharField(
         'Название жанра',
         max_length=settings.MAX_LENGTH
-        )
+    )
     slug = models.SlugField(
         'Slug жанра',
         unique=True,
         max_length=settings.SLUG_MAX_LENGTH
-        )
+    )
 
     class Meta:
         ordering = ('name',)
@@ -114,16 +114,16 @@ class Title(models.Model):
     name = models.CharField(
         'Название произведения',
         max_length=settings.MAX_LENGTH
-        )
+    )
     year = models.IntegerField(
         'Год выпуска',
         validators=(validate_year,),
-        )
+    )
     description = models.TextField(
         'Описание',
         blank=True,
         null=True
-        )
+    )
     genre = models.ManyToManyField(
         Genre,
         verbose_name='Жанр',
@@ -163,7 +163,6 @@ class GenreTitle(models.Model):
 
 
 class Review(models.Model):
-
     author = models.ForeignKey(
         CustomUser,
         on_delete=models.CASCADE,
@@ -173,7 +172,6 @@ class Review(models.Model):
     text = models.TextField(
         verbose_name='Текст отзыва'
     )
-
     score = models.PositiveIntegerField(  
         verbose_name='Oценка',
         validators=[
@@ -185,13 +183,11 @@ class Review(models.Model):
                 settings.MAX_VALUE_VALIDATOR,
                 message='Используйте число от 1 до 10!'
             ), ])
-
     pub_date = models.DateTimeField(
         auto_now_add=True,
         verbose_name='Дата создания',
         db_index=True
     )
-
     title = models.ForeignKey(
         Title,
         on_delete=models.CASCADE,
@@ -217,7 +213,6 @@ class Review(models.Model):
 
 class Comment(models.Model):
     """Тут мы отрабатываем комментарии к отзывам."""
-
     text = models.TextField(
         verbose_name='Текст комментария'
     )
