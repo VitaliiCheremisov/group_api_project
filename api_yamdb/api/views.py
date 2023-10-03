@@ -21,7 +21,7 @@ from .permissions import (IsAdminIsModeratorIsAuthor, IsAdminIsUserOrReadOnly,
                           IsSuperUserOrIsAdmin)
 from .serializers import (CategorySerializer, CommentSerializer,
                           CustomUserSerializer, GenreSerializer,
-                          ReviewsSerializer, SignUpSerializer,
+                          ReviewSerializer, SignUpSerializer,
                           TitleChangeSerializer, TitleSerializer,
                           TokenSerializer)
 from .utils import CreateDestroyListViewSet
@@ -160,9 +160,9 @@ class UsersViewSet(mixins.ListModelMixin,
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class ReviewsViewSet(viewsets.ModelViewSet):
+class ReviewViewSet(viewsets.ModelViewSet):
     """Вьюсет для обьектов модели Reviews."""
-    serializer_class = ReviewsSerializer
+    serializer_class = ReviewSerializer
     permission_classes = (IsAdminIsModeratorIsAuthor,)
     http_method_names = settings.ALLOWED_METHODS
 

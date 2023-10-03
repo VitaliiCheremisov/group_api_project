@@ -28,8 +28,10 @@ class TitleSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Title
-        fields = ('id', 'name', 'year', 'description',
-                  'genre', 'category', 'rating')
+        fields = (
+            'id', 'name', 'year', 'description',
+            'genre', 'category', 'rating'
+        )
 
 
 class TitleChangeSerializer(serializers.ModelSerializer):
@@ -46,7 +48,10 @@ class TitleChangeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Title
-        fields = ('id', 'name', 'year', 'description', 'genre', 'category')
+        fields = (
+            'id', 'name', 'year', 'description', 'genre',
+            'category'
+        )
 
 
 class TokenSerializer(serializers.ModelSerializer):
@@ -86,11 +91,13 @@ class CustomUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CustomUser
-        fields = ('username', 'email', 'first_name',
-                  'last_name', 'bio', 'role')
+        fields = (
+            'username', 'email', 'first_name',
+            'last_name', 'bio', 'role'
+        )
 
 
-class ReviewsSerializer(serializers.ModelSerializer):
+class ReviewSerializer(serializers.ModelSerializer):
     """Сериалайзер для отзывов."""
     author = serializers.StringRelatedField(
         read_only=True
@@ -128,4 +135,5 @@ class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
         fields = (
-            'id', 'text', 'author', 'pub_date', 'reviews')
+            'id', 'text', 'author', 'pub_date', 'reviews'
+        )
