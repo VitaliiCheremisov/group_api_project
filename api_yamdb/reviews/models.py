@@ -172,7 +172,7 @@ class Review(models.Model):
     text = models.TextField(
         verbose_name='Текст отзыва'
     )
-    score = models.PositiveIntegerField(  
+    score = models.PositiveIntegerField(
         verbose_name='Oценка',
         validators=[
             MinValueValidator(
