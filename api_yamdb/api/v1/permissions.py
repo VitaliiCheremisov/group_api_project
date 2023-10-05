@@ -3,18 +3,17 @@ from rest_framework import permissions
 
 class IsSuperUserOrIsAdmin(permissions.BasePermission):
     def has_permission(self, request, view):
+        # Если убираю request.user.is_superuser падает тест,
+        # пришлось оставить
         return (request.user.is_authenticated
-                and (request.user.is_superuser or request.user.is_staff
-                     or request.user.is_admin))
+                and (request.user.is_superuser or request.user.is_admin))
 
 
 class IsAdminIsUserOrReadOnly(permissions.BasePermission):
     def has_permission(self, request, view):
         if request.method in permissions.SAFE_METHODS:
             return True
-        if request.user.is_authenticated:
-            return request.user.is_admin
-        return False
+        return request.user.is_admin if request.user.is_authenticated else False
 
 
 class IsAdminIsModeratorIsAuthor(permissions.BasePermission):
