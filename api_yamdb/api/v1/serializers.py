@@ -1,7 +1,7 @@
 from django.core.validators import validate_email
 from django.utils import timezone
 from rest_framework import serializers
-from rest_framework.validators import UniqueValidator, UniqueTogetherValidator
+from rest_framework.validators import UniqueValidator
 
 from reviews.constants import MAX_NAME_LENGTH
 from reviews.models import Category, Comment, Genre, Review, Title
@@ -105,10 +105,23 @@ class CustomUserSerializer(serializers.ModelSerializer):
         )
 
 
+class GetTitleId:
+    """Получение title_id для ReviewSerializers."""
+    requires_context = True
+
+    def call(self, serializer_field):
+        return (serializer_field.context['request']
+                .parser_context['kwargs']['title_id'])
+
+
 class ReviewSerializer(serializers.ModelSerializer):
     """Сериалайзер для отзывов."""
     author = serializers.StringRelatedField(
         read_only=True
+    )
+    title = serializers.PrimaryKeyRelatedField(
+        read_only=True,
+        default=GetTitleId()
     )
 
     class Meta:
@@ -117,13 +130,19 @@ class ReviewSerializer(serializers.ModelSerializer):
             '__all__'
         )
 
-        validators = [
-            UniqueTogetherValidator(
-                queryset=Review.objects.all(),
-                fields=('title', 'author'),
-                message='Вы уже оценили это произведение.'
+    # Не получается применить UniqueTogetherValidator,
+    # валятся тесты...
+    def validate(self, data):
+        """Защита от повторных отзывов от одного автора."""
+        if not self.context.get('request').method == 'POST':
+            return data
+        author = self.context.get('request').user
+        title_id = self.context.get('view').kwargs.get('title_id')
+        if Review.objects.filter(author=author, title=title_id).exists():
+            raise serializers.ValidationError(
+                'Нельзя оставлять отзыв два раза на один фильм'
             )
-        ]
+        return data
 
 
 class CommentSerializer(serializers.ModelSerializer):
