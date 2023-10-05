@@ -1,84 +1,58 @@
-from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.core.validators import (MaxValueValidator,
                                     MinValueValidator)
 
 from .validators import validate_year
+from . import constants
 
 
 class CustomUser(AbstractUser):
-    username = models.CharField(
-        max_length=settings.MAX_NAME_LENGTH,
-        unique=True,
-        blank=False,
-        null=False
-    )
+    CHOICES = [
+        (constants.ADMIN, 'Администратор'),
+        (constants.MODERATOR, 'Модератор'),
+        (constants.USER, 'Пользователь')
+    ]
     email = models.EmailField(
-        max_length=settings.MAX_EMAIL_LENGTH,
+        max_length=constants.MAX_EMAIL_LENGTH,
         unique=True,
         blank=False,
         null=False
-    )
-    first_name = models.CharField(
-        'имя',
-        max_length=settings.MAX_NAME_LENGTH,
-        blank=True
-    )
-    last_name = models.CharField(
-        'фамилия',
-        max_length=settings.MAX_NAME_LENGTH,
-        blank=True
     )
     bio = models.TextField(
-        'биография',
+        'Биография',
         blank=True
     )
     role = models.CharField(
-        'роль',
-        max_length=settings.MAX_ROLE_LENGTH,
-        choices=settings.CHOICES,
-        default=settings.USER,
-        blank=True
+        'Роль',
+        max_length=constants.MAX_ROLE_LENGTH,
+        choices=CHOICES,
+        default=constants.USER,
+        blank=False
     )
-    confirmation_code = models.CharField(
-        'код подтверждения',
-        max_length=settings.MAX_NAME_LENGTH,
-        null=True,
-        blank=False,
-        default='0000'
-    )
-
-    @property
-    def is_admin(self):
-        return self.role == settings.ADMIN
-
-    @property
-    def is_moderator(self):
-        return self.role == settings.MODERATOR
-
-    @property
-    def is_user(self):
-        return self.role == settings.USER
 
     class Meta:
-        ordering = ('id',)
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
 
-    def __str__(self):
-        return self.username
+    @property
+    def is_admin(self):
+        return self.role == constants.ADMIN
+
+    @property
+    def is_moderator(self):
+        return self.role == constants.MODERATOR
 
 
 class Category(models.Model):
     name = models.CharField(
         'Название категории',
-        max_length=settings.MAX_LENGTH
+        max_length=constants.MAX_LENGTH
     )
     slug = models.SlugField(
         'Slug категории',
         unique=True,
-        max_length=settings.SLUG_MAX_LENGTH
+        max_length=constants.SLUG_MAX_LENGTH
     )
 
     class Meta:
@@ -87,18 +61,18 @@ class Category(models.Model):
         verbose_name_plural = 'Категории'
 
     def __str__(self):
-        return self.name[:settings.SHORT_TEXT_LENGTH]
+        return self.name[:constants.SHORT_TEXT_LENGTH]
 
 
 class Genre(models.Model):
     name = models.CharField(
         'Название жанра',
-        max_length=settings.MAX_LENGTH
+        max_length=constants.MAX_LENGTH
     )
     slug = models.SlugField(
         'Slug жанра',
         unique=True,
-        max_length=settings.SLUG_MAX_LENGTH
+        max_length=constants.SLUG_MAX_LENGTH
     )
 
     class Meta:
@@ -107,33 +81,32 @@ class Genre(models.Model):
         verbose_name_plural = 'Жанры'
 
     def __str__(self):
-        return self.name[:settings.SHORT_TEXT_LENGTH]
+        return self.name[:constants.SHORT_TEXT_LENGTH]
 
 
 class Title(models.Model):
     name = models.CharField(
         'Название произведения',
-        max_length=settings.MAX_LENGTH
+        max_length=constants.MAX_LENGTH
     )
-    year = models.IntegerField(
+    year = models.PositiveIntegerField(
         'Год выпуска',
-        validators=(validate_year,),
+        validators=(validate_year,)
     )
     description = models.TextField(
         'Описание',
-        blank=True,
-        null=True
+        blank=True
     )
     genre = models.ManyToManyField(
         Genre,
-        verbose_name='Жанр',
+        verbose_name='Жанр'
     )
     category = models.ForeignKey(
         Category,
         on_delete=models.SET_NULL,
         verbose_name='Категория',
         blank=True,
-        null=True,
+        null=True
     )
 
     class Meta:
@@ -143,23 +116,7 @@ class Title(models.Model):
         verbose_name_plural = 'Произведения'
 
     def __str__(self):
-        return self.name[:settings.SHORT_TEXT_LENGTH]
-
-
-class GenreTitle(models.Model):
-    genre = models.ForeignKey(
-        Genre,
-        verbose_name='Жанр',
-        on_delete=models.CASCADE,
-    )
-    title = models.ForeignKey(
-        Title,
-        verbose_name='Произведение',
-        on_delete=models.CASCADE,
-    )
-
-    def __str__(self):
-        return f'{self.title} - это {self.genre} жанр.'
+        return self.name[:constants.SHORT_TEXT_LENGTH]
 
 
 class Review(models.Model):
@@ -176,11 +133,11 @@ class Review(models.Model):
         verbose_name='Oценка',
         validators=[
             MinValueValidator(
-                settings.MIN_VALUE_VALIDATOR,
+                constants.MIN_VALUE_VALIDATOR,
                 message='Используйте число от 1 до 10!'
             ),
             MaxValueValidator(
-                settings.MAX_VALUE_VALIDATOR,
+                constants.MAX_VALUE_VALIDATOR,
                 message='Используйте число от 1 до 10!'
             ), ])
     pub_date = models.DateTimeField(
@@ -208,7 +165,7 @@ class Review(models.Model):
         )
 
     def __str__(self):
-        return self.text[:settings.SHORT_TEXT_LENGTH]
+        return self.text[:constants.SHORT_TEXT_LENGTH]
 
 
 class Comment(models.Model):
@@ -231,7 +188,7 @@ class Comment(models.Model):
         Review,
         on_delete=models.CASCADE,
         related_name='comments',
-        verbose_name='Отзыв',
+        verbose_name='Отзыв'
     )
 
     class Meta:
@@ -240,4 +197,4 @@ class Comment(models.Model):
         ordering = ('-pub_date',)
 
     def __str__(self):
-        return self.text[:settings.SHORT_TEXT_LENGTH]
+        return self.text[:constants.SHORT_TEXT_LENGTH]

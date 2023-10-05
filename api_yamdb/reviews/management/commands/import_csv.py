@@ -2,17 +2,17 @@ import csv
 
 from django.conf import settings
 from django.core.management.base import BaseCommand
-from reviews.models import (Category, Comment, CustomUser, Genre, GenreTitle,
+from reviews.models import (Category, Comment, CustomUser, Genre,
                             Review, Title)
 
-FILES_CSV = {Category: 'category.csv',
-             Comment: 'comments.csv',
-             GenreTitle: 'genre_title.csv',
-             Genre: 'genre.csv',
-             Review: 'review.csv',
-             Title: 'titles.csv',
-             CustomUser: 'users.csv'
-             }
+FILES_CSV = {
+    Category: 'category.csv',
+    Comment: 'comments.csv',
+    Genre: 'genre.csv',
+    Review: 'review.csv',
+    Title: 'titles.csv',
+    CustomUser: 'users.csv'
+}
 
 
 class Command(BaseCommand):
