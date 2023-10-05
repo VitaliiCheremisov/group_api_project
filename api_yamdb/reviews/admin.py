@@ -1,17 +1,8 @@
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin
 
-from .models import (Category, Comment, CustomUser, Genre,
-                     Review, Title)
+from .models import Category, Comment, Genre, Review, Title
 
 admin.site.empty_value_display = '-пусто-'
-
-
-@admin.register(CustomUser)
-class CustomUserAdmin(UserAdmin):
-    list_display = ('username', 'email', 'first_name', 'last_name', 'role')
-    search_fields = ('username', 'email', 'first_name', 'last_name', 'role', 'bio')
-    list_filter = ('role',)
 
 
 @admin.register(Category)

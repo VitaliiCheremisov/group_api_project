@@ -1,9 +1,15 @@
 from django.core.validators import validate_email
+from django.utils import timezone
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
-from reviews.models import Category, Comment, CustomUser, Genre, Review, Title
+
+from reviews.constants import MAX_NAME_LENGTH
+from reviews.models import Category, Comment, Genre, Review, Title
+from users.models import CustomUser
 
 from .validators import validate_username
+
+now = timezone.now()
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -64,13 +70,15 @@ class TokenSerializer(serializers.ModelSerializer):
 class SignUpSerializer(serializers.ModelSerializer):
     """Сериалайзер для создания пользователя."""
     username = serializers.CharField(
-        max_length=150,
+        max_length=MAX_NAME_LENGTH,
         required=True,
-        validators=[validate_username, ],
+        validators=[validate_username]
     )
     email = serializers.CharField(
-        max_length=150,
-        validators=[validate_email, ],
+        # Без перепроверки ниже падает тест,
+        # поэтому оставил
+        max_length=MAX_NAME_LENGTH,
+        validators=[validate_email]
     )
 
     class Meta:
@@ -81,7 +89,7 @@ class SignUpSerializer(serializers.ModelSerializer):
 class CustomUserSerializer(serializers.ModelSerializer):
     """Сериалайзер для собственной модели юзера."""
     username = serializers.CharField(
-        max_length=150,
+        max_length=MAX_NAME_LENGTH,
         required=True,
         validators=[
             validate_username,
