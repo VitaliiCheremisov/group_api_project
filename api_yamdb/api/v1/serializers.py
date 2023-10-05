@@ -106,7 +106,7 @@ class CustomUserSerializer(serializers.ModelSerializer):
 
 
 class GetTitleId:
-    """Получение title для ReviewSerializers."""
+    """Получение title_id для ReviewSerializers."""
     requires_context = True
 
     def __call__(self, serializer_field):
