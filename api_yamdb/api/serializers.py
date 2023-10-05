@@ -58,7 +58,7 @@ class TokenSerializer(serializers.ModelSerializer):
     """Сериалайзер для получения токена."""
     class Meta:
         model = CustomUser
-        fields = ('username', 'confirmation_code')
+        fields = ('username',)
 
 
 class SignUpSerializer(serializers.ModelSerializer):

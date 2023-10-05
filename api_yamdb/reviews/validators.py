@@ -4,7 +4,7 @@ from django.utils import timezone
 
 def validate_year(data):
     """Проверка года выпуска."""
-    if timezone.now().year < data:
+    if data > timezone.now().year:
         raise ValidationError(
             'Нельзя добавлять произведения, которые еще не вышли.'
         )

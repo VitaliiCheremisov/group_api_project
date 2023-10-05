@@ -120,29 +120,3 @@ SIMPLE_JWT = {
 }
 
 ALLOWED_METHODS = ('get', 'post', 'retrieve', 'patch', 'delete')
-
-MAX_NAME_LENGTH = 150
-
-SHORT_TEXT_LENGTH = 20
-
-MAX_LENGTH = 256
-
-MAX_EMAIL_LENGTH = 250
-
-MAX_ROLE_LENGTH = 20
-
-SLUG_MAX_LENGTH = 50
-
-MIN_VALUE_VALIDATOR = 1
-
-MAX_VALUE_VALIDATOR = 10
-
-USER = 'user'
-ADMIN = 'admin'
-MODERATOR = 'moderator'
-
-CHOICES = [
-    (ADMIN, 'Администратор'),
-    (MODERATOR, 'Модератор'),
-    (USER, 'Пользователь')
-]
