@@ -105,10 +105,23 @@ class CustomUserSerializer(serializers.ModelSerializer):
         )
 
 
+class GetTitleId:
+    """Получение title для ReviewSerializers."""
+    requires_context = True
+
+    def __call__(self, serializer_field):
+        return (serializer_field.context['request']
+                .parser_context['kwargs']['title_id'])
+
+
 class ReviewSerializer(serializers.ModelSerializer):
     """Сериалайзер для отзывов."""
     author = serializers.StringRelatedField(
         read_only=True
+    )
+    title = serializers.PrimaryKeyRelatedField(
+        read_only=True,
+        default=GetTitleId()
     )
 
     class Meta:
