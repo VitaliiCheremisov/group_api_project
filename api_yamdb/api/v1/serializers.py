@@ -1,9 +1,15 @@
 from django.core.validators import validate_email
+from django.utils import timezone
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
-from reviews.models import Category, Comment, CustomUser, Genre, Review, Title
+
+from reviews.constants import MAX_NAME_LENGTH
+from reviews.models import Category, Comment, Genre, Review, Title
+from users.models import CustomUser
 
 from .validators import validate_username
+
+now = timezone.now()
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -58,19 +64,21 @@ class TokenSerializer(serializers.ModelSerializer):
     """Сериалайзер для получения токена."""
     class Meta:
         model = CustomUser
-        fields = ('username', 'confirmation_code')
+        fields = ('username',)
 
 
 class SignUpSerializer(serializers.ModelSerializer):
     """Сериалайзер для создания пользователя."""
     username = serializers.CharField(
-        max_length=150,
+        max_length=MAX_NAME_LENGTH,
         required=True,
-        validators=[validate_username, ],
+        validators=[validate_username]
     )
     email = serializers.CharField(
-        max_length=150,
-        validators=[validate_email, ],
+        # Без перепроверки ниже падает тест,
+        # поэтому оставил
+        max_length=MAX_NAME_LENGTH,
+        validators=[validate_email]
     )
 
     class Meta:
@@ -81,7 +89,7 @@ class SignUpSerializer(serializers.ModelSerializer):
 class CustomUserSerializer(serializers.ModelSerializer):
     """Сериалайзер для собственной модели юзера."""
     username = serializers.CharField(
-        max_length=150,
+        max_length=MAX_NAME_LENGTH,
         required=True,
         validators=[
             validate_username,
@@ -97,19 +105,33 @@ class CustomUserSerializer(serializers.ModelSerializer):
         )
 
 
+class GetTitleId:
+    """Получение title_id для ReviewSerializers."""
+    requires_context = True
+
+    def call(self, serializer_field):
+        return (serializer_field.context['request']
+                .parser_context['kwargs']['title_id'])
+
+
 class ReviewSerializer(serializers.ModelSerializer):
     """Сериалайзер для отзывов."""
     author = serializers.StringRelatedField(
         read_only=True
     )
+    title = serializers.PrimaryKeyRelatedField(
+        read_only=True,
+        default=GetTitleId()
+    )
 
     class Meta:
         model = Review
         fields = (
-            'id', 'text', 'author', 'score',
-            'pub_date'
+            '__all__'
         )
 
+    # Не получается применить UniqueTogetherValidator,
+    # валятся тесты...
     def validate(self, data):
         """Защита от повторных отзывов от одного автора."""
         if not self.context.get('request').method == 'POST':

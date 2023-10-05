@@ -2,15 +2,19 @@ import os
 from datetime import timedelta
 from pathlib import Path
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'p&l%385148kslhtyn^##a1)ilz@4zqj=rq&agdol^##zgl9(vs'
+SECRET_KEY = os.getenv('KEY')
 
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
-AUTH_USER_MODEL = 'reviews.CustomUser'
+AUTH_USER_MODEL = 'users.CustomUser'
 
 PAGE_PAGINATION_NUMBER = 5
 
@@ -25,9 +29,12 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework_simplejwt',
+
+    'django_filters',
+
     'api',
     'reviews',
-    'django_filters',
+    'users'
 ]
 
 MIDDLEWARE = [
@@ -84,7 +91,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'ru-RU'
 
 TIME_ZONE = 'UTC'
 
@@ -101,7 +108,7 @@ STATICFILES_DIRS = ((BASE_DIR / 'static/'),)
 EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
 EMAIL_FILE_PATH = os.path.join(BASE_DIR, 'sent_emails')
 
-EMAIL_PROJECT = 'vitalii.cheremisov@mail.ru'
+EMAIL_PROJECT = os.getenv('EMAIL')
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
@@ -120,29 +127,3 @@ SIMPLE_JWT = {
 }
 
 ALLOWED_METHODS = ('get', 'post', 'retrieve', 'patch', 'delete')
-
-MAX_NAME_LENGTH = 150
-
-SHORT_TEXT_LENGTH = 20
-
-MAX_LENGTH = 256
-
-MAX_EMAIL_LENGTH = 250
-
-MAX_ROLE_LENGTH = 20
-
-SLUG_MAX_LENGTH = 50
-
-MIN_VALUE_VALIDATOR = 1
-
-MAX_VALUE_VALIDATOR = 10
-
-USER = 'user'
-ADMIN = 'admin'
-MODERATOR = 'moderator'
-
-CHOICES = [
-    (ADMIN, 'Администратор'),
-    (MODERATOR, 'Модератор'),
-    (USER, 'Пользователь')
-]
