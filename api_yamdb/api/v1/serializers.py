@@ -1,7 +1,7 @@
 from django.core.validators import validate_email
 from django.utils import timezone
 from rest_framework import serializers
-from rest_framework.validators import UniqueValidator
+from rest_framework.validators import UniqueValidator, UniqueTogetherValidator
 
 from reviews.constants import MAX_NAME_LENGTH
 from reviews.models import Category, Comment, Genre, Review, Title
@@ -133,19 +133,12 @@ class ReviewSerializer(serializers.ModelSerializer):
             '__all__'
         )
 
-    # Не получается применить UniqueTogetherValidator,
-    # валятся тесты...
-    def validate(self, data):
-        """Защита от повторных отзывов от одного автора."""
-        if not self.context.get('request').method == 'POST':
-            return data
-        author = self.context.get('request').user
-        title_id = self.context.get('view').kwargs.get('title_id')
-        if Review.objects.filter(author=author, title=title_id).exists():
-            raise serializers.ValidationError(
-                'Нельзя оставлять отзыв два раза на один фильм'
+        validators = [
+            UniqueTogetherValidator(
+                queryset=Review.objects.all(),
+                fields=['title', 'author']
             )
-        return data
+        ]
 
 
 class CommentSerializer(serializers.ModelSerializer):
