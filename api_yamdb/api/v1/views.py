@@ -73,7 +73,8 @@ class APISignUp(APIView):
         serializer.is_valid(raise_exception=True)
         username = serializer.validated_data.get('username')
         email = serializer.validated_data.get('email')
-        # Если начинаю проверять в сериалайзере, падают тесты, не пойму почему...
+        # Если начинаю проверять в сериалайзере, падают тесты,
+        # не пойму почему...
         try:
             user, _ = CustomUser.objects.get_or_create(
                 username=username, email=email

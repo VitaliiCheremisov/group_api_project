@@ -2,13 +2,10 @@ import os
 from datetime import timedelta
 from pathlib import Path
 
-from dotenv import load_dotenv
-
-load_dotenv()
-
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.getenv('KEY')
+# Если прячу код в .env не проходят тесты на сайте
+SECRET_KEY = 'p&l%385148kslhtyn^##a1)ilz@4zqj=rq&agdol^##zgl9(vs'
 
 DEBUG = False
 
@@ -108,7 +105,7 @@ STATICFILES_DIRS = ((BASE_DIR / 'static/'),)
 EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
 EMAIL_FILE_PATH = os.path.join(BASE_DIR, 'sent_emails')
 
-EMAIL_PROJECT = os.getenv('EMAIL')
+EMAIL_PROJECT = 'vitalii.cheremisov@mail.ru'
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
