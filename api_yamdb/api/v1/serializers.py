@@ -116,8 +116,8 @@ class GetTitleId:
 
 class ReviewSerializer(serializers.ModelSerializer):
     """Сериалайзер для отзывов."""
-    author = serializers.PrimaryKeyRelatedField(
-        read_only=True, default=serializers.CurrentUserDefault())
+    author = serializers.HiddenField(
+        default=serializers.CurrentUserDefault())
     title = serializers.PrimaryKeyRelatedField(
         read_only=True,
         default=GetTitleId()
