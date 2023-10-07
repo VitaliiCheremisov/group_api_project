@@ -121,6 +121,7 @@ class ReviewSerializer(serializers.ModelSerializer):
 
     author = serializers.StringRelatedField(
         read_only=True
+
     )
 
     class Meta:
