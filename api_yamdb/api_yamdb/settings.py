@@ -4,7 +4,6 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Если прячу код в .env не проходят тесты на сайте
 SECRET_KEY = 'p&l%385148kslhtyn^##a1)ilz@4zqj=rq&agdol^##zgl9(vs'
 
 DEBUG = False
@@ -25,8 +24,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    'rest_framework_simplejwt',
 
+    'rest_framework_simplejwt',
     'django_filters',
 
     'api',
@@ -122,5 +121,3 @@ SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=TOKEN_LIFE_TIME_DAYS),
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
-
-ALLOWED_METHODS = ('get', 'post', 'retrieve', 'patch', 'delete')

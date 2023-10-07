@@ -8,4 +8,3 @@ def validate_year(data):
         raise ValidationError(
             'Нельзя добавлять произведения, которые еще не вышли.'
         )
-    return data
