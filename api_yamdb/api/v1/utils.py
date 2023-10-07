@@ -1,3 +1,4 @@
+from django.db.models.query import prefetch_related_objects
 from django.conf import settings
 from django.core.mail import send_mail
 from rest_framework import mixins, viewsets
@@ -9,18 +10,40 @@ class CreateDestroyListViewSet(mixins.CreateModelMixin,
                                mixins.ListModelMixin,
                                viewsets.GenericViewSet):
     """Создание своего вюьсета."""
+
     pass
 
 
 class PatchModelMixin:
+    """Создание миксина без PUT-запроса."""
+
+    # def partial_update(self, request, *args, **kwargs):
+    #     partial = True
+    #     instance = self.get_object()
+    #     serializer = self.get_serializer(
+    #         instance, data=request.data, partial=partial
+    #     )
+    #     serializer.is_valid(raise_exception=True)
+    #     self.perform_update(serializer)
+    #     return Response(serializer.data)
+    #
+    # def perform_update(self, serializer):
+    #     serializer.save()
+
     def partial_update(self, request, *args, **kwargs):
-        partial = True
         instance = self.get_object()
         serializer = self.get_serializer(
-            instance, data=request.data, partial=partial
+            instance,
+            data=request.data,
+            partial=True
         )
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
+        queryset = self.filter_queryset(self.get_queryset())
+        if queryset._prefetch_related_lookups:
+            instance._prefetched_objects_cache = {}
+            prefetch_related_objects([instance],
+                                     *queryset._prefetch_related_lookups)
         return Response(serializer.data)
 
     def perform_update(self, serializer):
@@ -34,10 +57,12 @@ class CreateListRetrieveDestroyViewSet(mixins.CreateModelMixin,
                                        PatchModelMixin,
                                        viewsets.GenericViewSet):
     """Собственный вьюсет без PUT-запроса."""
+
     pass
 
 
 def send_code(email, confirmation_code):
+    """Отправка email-сообщения."""
     send_mail(
         subject='Регистрация',
         message=f'Ваш код {confirmation_code}',

@@ -1,9 +1,8 @@
 from django.contrib.auth.tokens import default_token_generator
-from django.db import IntegrityError
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, permissions, serializers, status
+from rest_framework import filters, permissions, status
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
 from rest_framework.pagination import PageNumberPagination
@@ -28,6 +27,7 @@ from .utils import (CreateDestroyListViewSet, CreateListRetrieveDestroyViewSet,
 
 class CategoryViewSet(CreateDestroyListViewSet):
     """Работа с категориями."""
+
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = (IsAdminIsUserOrReadOnly,)
@@ -39,6 +39,7 @@ class CategoryViewSet(CreateDestroyListViewSet):
 
 class GenreViewSet(CreateDestroyListViewSet):
     """Работа с жанрами."""
+
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
     permission_classes = (IsAdminIsUserOrReadOnly,)
@@ -49,6 +50,7 @@ class GenreViewSet(CreateDestroyListViewSet):
 
 class TitleViewSet(CreateListRetrieveDestroyViewSet):
     """Работа с заголовками."""
+
     serializer_class = TitleSerializer
     queryset = Title.objects.all().annotate(
         rating=Avg('reviews__score')
@@ -66,33 +68,50 @@ class TitleViewSet(CreateListRetrieveDestroyViewSet):
 
 class APISignUp(APIView):
     """Создание нового пользователя."""
+
     permission_classes = (permissions.AllowAny,)
 
     def post(self, request):
+        if (request.user.is_authenticated
+                and CustomUser.objects.filter(
+                    username=request.data.get('username')
+                )):
+            confirmation_code = default_token_generator.make_token(
+                request.user
+            )
+            send_code(
+                email=request.data.get('email'),
+                confirmation_code=confirmation_code
+            )
+        if CustomUser.objects.filter(email=request.data.get('email')):
+            if not CustomUser.objects.filter(
+                username=request.data.get('username')
+            ):
+                return Response(
+                    'Email уже занят',
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        if CustomUser.objects.filter(username=request.data.get('username')):
+            if not CustomUser.objects.filter(email=request.data.get('email')):
+                return Response(
+                    'Неверная электронная почта',
+                    status=status.HTTP_400_BAD_REQUEST
+                )
         serializer = SignUpSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        username = serializer.validated_data.get('username')
-        email = serializer.validated_data.get('email')
-        # Если начинаю проверять в сериалайзере, падают тесты,
-        # не пойму почему...
-        try:
-            user, _ = CustomUser.objects.get_or_create(
-                username=username, email=email
-            )
-        except IntegrityError:
-            raise serializers.ValidationError('Пользователь уже существует')
+        user, _ = CustomUser.objects.get_or_create(**serializer.validated_data)
         confirmation_code = default_token_generator.make_token(user)
-        send_code(email=email, confirmation_code=confirmation_code)
+        send_code(email=user.email, confirmation_code=confirmation_code)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class APIToken(APIView):
     """Получение токена."""
+
     def post(self, request):
         serializer = TokenSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        data = serializer.validated_data
-        user = get_object_or_404(CustomUser, username=data['username'])
+        user = get_object_or_404(CustomUser, username=request.data['username'])
         confirmation_code = serializer.validated_data.get('confirmation_code')
         if not default_token_generator.check_token(user, confirmation_code):
             message = {'confirmation_code': 'Неверный код подтверждения'}
@@ -103,6 +122,7 @@ class APIToken(APIView):
 
 class UsersViewSet(CreateListRetrieveDestroyViewSet):
     """Работа с пользователем."""
+
     queryset = CustomUser.objects.all()
     serializer_class = CustomUserSerializer
     permission_classes = (IsSuperUserOrIsAdmin,)
@@ -138,6 +158,7 @@ class UsersViewSet(CreateListRetrieveDestroyViewSet):
 
 class ReviewViewSet(CreateListRetrieveDestroyViewSet):
     """Вьюсет для обьектов модели Reviews."""
+
     serializer_class = ReviewSerializer
     permission_classes = (IsAdminIsModeratorIsAuthor,)
 
@@ -160,12 +181,14 @@ class ReviewViewSet(CreateListRetrieveDestroyViewSet):
 
 class CommentViewSet(CreateListRetrieveDestroyViewSet):
     """Вьюсет для обьектов модели Comment."""
+
     serializer_class = CommentSerializer
     permission_classes = (IsAdminIsModeratorIsAuthor,)
 
     def get_reviews(self):
-        reviews_id = self.kwargs.get('reviews_id')
-        return get_object_or_404(Review, pk=reviews_id)
+        return get_object_or_404(
+            Review, pk=self.kwargs.get('reviews_id')
+        )
 
     def get_queryset(self):
         return self.get_reviews().comments.all()

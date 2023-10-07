@@ -2,13 +2,9 @@ import os
 from datetime import timedelta
 from pathlib import Path
 
-from dotenv import load_dotenv
-
-load_dotenv()
-
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.getenv('KEY')
+SECRET_KEY = 'p&l%385148kslhtyn^##a1)ilz@4zqj=rq&agdol^##zgl9(vs'
 
 DEBUG = False
 
@@ -28,8 +24,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    'rest_framework_simplejwt',
 
+    'rest_framework_simplejwt',
     'django_filters',
 
     'api',
@@ -108,7 +104,7 @@ STATICFILES_DIRS = ((BASE_DIR / 'static/'),)
 EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
 EMAIL_FILE_PATH = os.path.join(BASE_DIR, 'sent_emails')
 
-EMAIL_PROJECT = os.getenv('EMAIL')
+EMAIL_PROJECT = 'vitalii.cheremisov@mail.ru'
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
@@ -125,5 +121,3 @@ SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=TOKEN_LIFE_TIME_DAYS),
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
-
-ALLOWED_METHODS = ('get', 'post', 'retrieve', 'patch', 'delete')

@@ -1,6 +1,8 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
-from reviews import constants
+from rest_framework.validators import ValidationError
+
+from api_yamdb import constants
 
 
 class CustomUser(AbstractUser):
@@ -23,13 +25,20 @@ class CustomUser(AbstractUser):
         'Роль',
         max_length=constants.MAX_ROLE_LENGTH,
         choices=CHOICES,
-        default=constants.USER,
-        blank=False
+        default=constants.USER
     )
 
     class Meta:
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
+
+    @classmethod
+    def clean(cls):
+        super().clean()
+        if cls.username == 'me':
+            raise ValidationError(
+                'Создавать пользователя me нельзя'
+            )
 
     @property
     def is_admin(self):

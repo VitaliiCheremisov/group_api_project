@@ -1,9 +1,10 @@
 from django.core.validators import MaxValueValidator, MinValueValidator
+from django.utils import timezone
 from django.db import models
-from users.models import CustomUser
+from django.core.exceptions import ValidationError
 
-from . import constants
-from .validators import validate_year
+from api_yamdb import constants
+from users.models import CustomUser
 
 
 class Category(models.Model):
@@ -53,7 +54,6 @@ class Title(models.Model):
     )
     year = models.PositiveIntegerField(
         'Год выпуска',
-        validators=(validate_year,)
     )
     description = models.TextField(
         'Описание',
@@ -76,6 +76,13 @@ class Title(models.Model):
         default_related_name = 'titles'
         verbose_name = 'Произведение'
         verbose_name_plural = 'Произведения'
+
+    def validate(self, data):
+        """Проверка года выпуска."""
+        if data['year'] > timezone.now().year:
+            raise ValidationError(
+                'Нельзя добавлять произведения, которые еще не вышли.'
+            )
 
     def __str__(self):
         return self.name[:constants.SHORT_TEXT_LENGTH]
@@ -131,7 +138,6 @@ class Review(models.Model):
 
 
 class Comment(models.Model):
-    """Тут мы отрабатываем комментарии к отзывам."""
     text = models.TextField(
         verbose_name='Текст комментария'
     )

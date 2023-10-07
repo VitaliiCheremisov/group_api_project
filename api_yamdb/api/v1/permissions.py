@@ -2,22 +2,24 @@ from rest_framework import permissions
 
 
 class IsSuperUserOrIsAdmin(permissions.BasePermission):
+    """Админ или суперюзер."""
+
     def has_permission(self, request, view):
-        # Если убираю request.user.is_superuser падает тест,
-        # пришлось оставить
         return (request.user.is_authenticated
                 and (request.user.is_superuser or request.user.is_admin))
 
 
 class IsAdminIsUserOrReadOnly(permissions.BasePermission):
+    """Админ или авторизованный юзер или только чтение."""
+
     def has_permission(self, request, view):
-        if request.method in permissions.SAFE_METHODS:
-            return True
-        return request.user.is_admin \
-            if request.user.is_authenticated else False
+        return (request.method in permissions.SAFE_METHODS
+                or request.user.is_authenticated and request.user.is_admin)
 
 
 class IsAdminIsModeratorIsAuthor(permissions.BasePermission):
+    """Админ или модератор или автор."""
+
     def has_permission(self, request, view):
         return (request.method in permissions.SAFE_METHODS
                 or request.user.is_authenticated)
