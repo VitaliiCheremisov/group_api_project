@@ -1,6 +1,6 @@
 from django.contrib.auth.models import AbstractUser
+from django.core.validators import RegexValidator
 from django.db import models
-from rest_framework.validators import ValidationError
 
 from api_yamdb import constants
 
@@ -11,11 +11,18 @@ class CustomUser(AbstractUser):
         (constants.MODERATOR, 'Модератор'),
         (constants.USER, 'Пользователь')
     ]
+    username = models.CharField(
+        'Имя пользователя',
+        max_length=constants.MAX_NAME_LENGTH,
+        unique=True,
+        validators=[RegexValidator(
+            regex=r'^[\w.@+-]+\Z',
+            message='Недопустимый символ'
+        )]
+    )
     email = models.EmailField(
         max_length=constants.MAX_EMAIL_LENGTH,
-        unique=True,
-        blank=False,
-        null=False
+        unique=True
     )
     bio = models.TextField(
         'Биография',
@@ -31,14 +38,6 @@ class CustomUser(AbstractUser):
     class Meta:
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
-
-    @classmethod
-    def clean(cls):
-        super().clean()
-        if cls.username == 'me':
-            raise ValidationError(
-                'Создавать пользователя me нельзя'
-            )
 
     @property
     def is_admin(self):

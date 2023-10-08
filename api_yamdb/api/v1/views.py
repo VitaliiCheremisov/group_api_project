@@ -8,21 +8,20 @@ from rest_framework.filters import SearchFilter
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
-
 from rest_framework_simplejwt.tokens import AccessToken
+
+from api.v1.filters import TitleFilter
+from api.v1.permissions import (IsAdminIsModeratorIsAuthor, IsAdminIsUserOrReadOnly,
+                                IsSuperUserOrIsAdmin)
+from api.v1.serializers import (CategorySerializer, CommentSerializer,
+                                CustomUserSerializer, GenreSerializer,
+                                ReviewSerializer, SignUpSerializer,
+                                TitleChangeSerializer, TitleSerializer,
+                                TokenSerializer)
+from api.v1.utils import (CreateDestroyListViewSet, CreateListRetrieveDestroyViewSet,
+                          send_code)
 from reviews.models import Category, Genre, Review, Title
 from users.models import CustomUser
-
-from .filters import TitleFilter
-from .permissions import (IsAdminIsModeratorIsAuthor, IsAdminIsUserOrReadOnly,
-                          IsSuperUserOrIsAdmin)
-from .serializers import (CategorySerializer, CommentSerializer,
-                          CustomUserSerializer, GenreSerializer,
-                          ReviewSerializer, SignUpSerializer,
-                          TitleChangeSerializer, TitleSerializer,
-                          TokenSerializer)
-from .utils import (CreateDestroyListViewSet, CreateListRetrieveDestroyViewSet,
-                    send_code)
 
 
 class CategoryViewSet(CreateDestroyListViewSet):
@@ -72,34 +71,17 @@ class APISignUp(APIView):
     permission_classes = (permissions.AllowAny,)
 
     def post(self, request):
-        if (request.user.is_authenticated
-                and CustomUser.objects.filter(
-                    username=request.data.get('username')
-                )):
-            confirmation_code = default_token_generator.make_token(
-                request.user
-            )
-            send_code(
-                email=request.data.get('email'),
-                confirmation_code=confirmation_code
-            )
-        if CustomUser.objects.filter(email=request.data.get('email')):
-            if not CustomUser.objects.filter(
-                username=request.data.get('username')
-            ):
-                return Response(
-                    'Email уже занят',
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-        if CustomUser.objects.filter(username=request.data.get('username')):
-            if not CustomUser.objects.filter(email=request.data.get('email')):
-                return Response(
-                    'Неверная электронная почта',
-                    status=status.HTTP_400_BAD_REQUEST
-                )
+        user = CustomUser.objects.filter(
+            username=request.data.get('username'),
+            email=request.data.get('email')
+        ).first()
+        if user:
+            confirmation_code = default_token_generator.make_token(user)
+            send_code(email=user.email, confirmation_code=confirmation_code)
+            return Response('Новый код отправлен', status=status.HTTP_200_OK)
         serializer = SignUpSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user, _ = CustomUser.objects.get_or_create(**serializer.validated_data)
+        user = CustomUser.objects.create(**serializer.validated_data)
         confirmation_code = default_token_generator.make_token(user)
         send_code(email=user.email, confirmation_code=confirmation_code)
         return Response(serializer.data, status=status.HTTP_200_OK)
