@@ -1,10 +1,13 @@
+from django.shortcuts import get_object_or_404
 from rest_framework import serializers
-from rest_framework.validators import UniqueValidator
+from rest_framework.validators import (UniqueTogetherValidator,
+                                       UniqueValidator,
+                                       ValidationError)
 
-from api.v1.validators import validate_username
-from api_yamdb.constants import MAX_NAME_LENGTH
+from api_yamdb.constants import MAX_NAME_LENGTH, MAX_EMAIL_LENGTH
 from reviews.models import Category, Comment, Genre, Review, Title
 from users.models import CustomUser
+from .validators import validate_username
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -110,31 +113,37 @@ class CustomUserSerializer(serializers.ModelSerializer):
         )
 
 
+class CurrentTitleDefault:
+    requires_context = True
+
+    def __call__(self, serializer_field):
+        title_id = serializer_field.context['view'].kwargs.get('title_id')
+        return get_object_or_404(Title, id=title_id)
+
+    def __repr__(self):
+        return '%s()' % self.__class__.__name__
+
+
 class ReviewSerializer(serializers.ModelSerializer):
     """Сериалайзер для отзывов."""
 
-    author = serializers.StringRelatedField(
-        read_only=True
-
+    author = serializers.SlugRelatedField(
+        default=serializers.CurrentUserDefault(),
+        read_only=True,
+        slug_field='username'
     )
+    title = serializers.HiddenField(
+        default=CurrentTitleDefault())
 
     class Meta:
-        model = Review
-        fields = (
-            '__all__'
-        )
-
-    def validate(self, data):
-        """Защита от повторных отзывов от одного автора."""
-        if not self.context.get('request').method == 'POST':
-            return data
-        author = self.context.get('request').user
-        title_id = self.context.get('view').kwargs.get('title_id')
-        if Review.objects.filter(author=author, title=title_id).exists():
-            raise serializers.ValidationError(
-                'Нельзя оставлять отзыв два раза на один фильм'
+        fields = ('id', 'text', 'author', 'score', 'pub_date', 'title')
+        model = Review,
+        validators = [
+            UniqueTogetherValidator(
+                queryset=Review.objects.all(),
+                fields=('author', 'title')
             )
-        return data
+        ]
 
 
 class CommentSerializer(serializers.ModelSerializer):
