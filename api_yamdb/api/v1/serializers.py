@@ -1,10 +1,9 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.validators import (UniqueTogetherValidator,
-                                       UniqueValidator,
-                                       ValidationError)
+                                       UniqueValidator)
 
-from api_yamdb.constants import MAX_NAME_LENGTH, MAX_EMAIL_LENGTH
+from api_yamdb.constants import MAX_NAME_LENGTH
 from reviews.models import Category, Comment, Genre, Review, Title
 from users.models import CustomUser
 from .validators import validate_username
@@ -137,7 +136,7 @@ class ReviewSerializer(serializers.ModelSerializer):
 
     class Meta:
         fields = ('id', 'text', 'author', 'score', 'pub_date', 'title')
-        model = Review,
+        model = Review
         validators = [
             UniqueTogetherValidator(
                 queryset=Review.objects.all(),
