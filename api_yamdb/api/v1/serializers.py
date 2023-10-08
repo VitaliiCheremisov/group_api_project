@@ -1,12 +1,10 @@
-from django.core.validators import validate_email
 from rest_framework import serializers
-from rest_framework.validators import UniqueValidator, ValidationError
+from rest_framework.validators import UniqueValidator
 
-from api_yamdb.constants import MAX_NAME_LENGTH, MAX_EMAIL_LENGTH
+from api.v1.validators import validate_username
+from api_yamdb.constants import MAX_NAME_LENGTH
 from reviews.models import Category, Comment, Genre, Review, Title
 from users.models import CustomUser
-
-from .validators import validate_username
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -72,26 +70,22 @@ class TokenSerializer(serializers.ModelSerializer):
 class SignUpSerializer(serializers.ModelSerializer):
     """Сериалайзер для создания пользователя."""
 
-    username = serializers.CharField(
-        max_length=MAX_NAME_LENGTH,
-        required=True,
-        validators=[validate_username]
-    )
-    email = serializers.CharField(
-        # Применяю встроенную валидацию, чтобы
-        # по тестам приходила в ответе информация
-        # о двух полях сразу
-        validators=[validate_email]
-    )
-
     class Meta:
         model = CustomUser
         fields = ('email', 'username')
 
     def validate(self, data):
-        if len(data['email']) > MAX_EMAIL_LENGTH:
-            raise ValidationError(
-                'Превышена длина поля email'
+        if data.get('username') == 'me':
+            raise serializers.ValidationError(
+                'Использовать имя me запрещено'
+            )
+        if CustomUser.objects.filter(username=data.get('username')):
+            raise serializers.ValidationError(
+                'Такой username уже существует'
+            )
+        if CustomUser.objects.filter(email=data.get('email')):
+            raise serializers.ValidationError(
+                'Такой email уже существует'
             )
         return data
 
@@ -130,8 +124,6 @@ class ReviewSerializer(serializers.ModelSerializer):
             '__all__'
         )
 
-    # У нас вылетает ошибка, что нет
-    # кода ответа 201 в 13 тестах сразу)
     def validate(self, data):
         """Защита от повторных отзывов от одного автора."""
         if not self.context.get('request').method == 'POST':
